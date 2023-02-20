@@ -1,14 +1,15 @@
-package logic
+package user
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-qt-business/app/constant"
 	"github.com/gin-qt-business/app/dao"
+	errEnum "github.com/gin-qt-business/app/errors"
 	"github.com/gin-qt-business/app/type/data"
-	"github.com/gin-qt-business/app/utils"
+	"github.com/gin-qt-business/app/utils/aes"
+	"github.com/gin-qt-business/app/utils/jwt"
 	pinyin "github.com/mozillazg/go-pinyin"
 	"github.com/spf13/viper"
 )
@@ -23,15 +24,19 @@ func (userLogic *UserLogic) LoginByPassword() (*data.LoginByPasswordRes, error) 
 	key := viper.Get("app.aes_key").(string)
 	iv := viper.Get("app.aes_iv").(string)
 	input := userLogic.LoginByPasswordParam
-	password, err := utils.Decrypt(input.Password, []byte(key), []byte(iv))
+	aes := &aes.AES{
+		Key: []byte(key),
+		Iv:  []byte(iv),
+	}
+	password, err := aes.Decrypt(input.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	userDao := &dao.User{
+	userDao := &User{
 		Uid:       input.Uid,
 		Password:  string(password),
-		DeletedAt: uint(constant.IS_NOT_DELETED),
+		DeletedAt: uint(dao.IS_NOT_DELETED),
 	}
 
 	count, err := userDao.CountUser()
@@ -40,10 +45,10 @@ func (userLogic *UserLogic) LoginByPassword() (*data.LoginByPasswordRes, error) 
 	}
 
 	if count == 0 {
-		return nil, fmt.Errorf(string(constant.USER_IS_NOT_EXIST_ERROR))
+		return nil, fmt.Errorf(string(errEnum.USER_IS_NOT_EXIST_ERROR))
 	}
 
-	jwt := &utils.JWT{
+	jwt := &jwt.JWT{
 		Username: input.Uid,
 		Password: string(password),
 	}
@@ -78,12 +83,17 @@ func (userLogic *UserLogic) Register() (data.RegisterRes, error) {
 		}
 	}
 
-	password, err := utils.Decrypt(input.Password, []byte(key), []byte(iv))
+	aes := &aes.AES{
+		Key: []byte(key),
+		Iv:  []byte(iv),
+	}
+
+	password, err := aes.Decrypt(input.Password)
 	if err != nil {
 		return data.RegisterRes{IsOk: false}, err
 	}
 
-	user := dao.User{
+	user := User{
 		Uid: uid,
 	}
 
@@ -103,7 +113,7 @@ func (userLogic *UserLogic) Register() (data.RegisterRes, error) {
 	return data.RegisterRes{IsOk: true}, nil
 }
 
-func checkUid(user *dao.User) error {
+func checkUid(user *User) error {
 	preUid := user.Uid
 	count, err := user.CountUser()
 	if err != nil {

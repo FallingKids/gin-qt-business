@@ -1,4 +1,4 @@
-package utils
+package aes
 
 import (
 	"bytes"
@@ -7,8 +7,13 @@ import (
 	"encoding/base64"
 )
 
-func Encrypt(data []byte, key []byte, iv []byte) (string, error) {
-	block, err := aes.NewCipher(key)
+type AES struct {
+	Key []byte
+	Iv  []byte
+}
+
+func (a *AES) Encrypt(data []byte) (string, error) {
+	block, err := aes.NewCipher(a.Key)
 	if err != nil {
 		return "", err
 	}
@@ -19,19 +24,19 @@ func Encrypt(data []byte, key []byte, iv []byte) (string, error) {
 	ciphertext := make([]byte, len(data))
 
 	// CBC mode
-	mode := cipher.NewCBCEncrypter(block, iv)
+	mode := cipher.NewCBCEncrypter(block, a.Iv)
 	mode.CryptBlocks(ciphertext, data)
 
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-func Decrypt(data string, key []byte, iv []byte) ([]byte, error) {
+func (a *AES) Decrypt(data string) ([]byte, error) {
 	ciphertext, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
 		return nil, err
 	}
 
-	block, err := aes.NewCipher(key)
+	block, err := aes.NewCipher(a.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +44,7 @@ func Decrypt(data string, key []byte, iv []byte) ([]byte, error) {
 	plaintext := make([]byte, len(ciphertext))
 
 	// CBC mode
-	mode := cipher.NewCBCDecrypter(block, iv)
+	mode := cipher.NewCBCDecrypter(block, a.Iv)
 	mode.CryptBlocks(plaintext, ciphertext)
 
 	// PKCS7Padding

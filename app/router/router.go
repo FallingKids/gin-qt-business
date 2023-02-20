@@ -4,24 +4,26 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-qt-business/app/controller"
+	"github.com/gin-qt-business/app/handle/news"
+	"github.com/gin-qt-business/app/handle/stock"
+	"github.com/gin-qt-business/app/handle/user"
 	"github.com/gin-qt-business/app/middleware"
 )
 
 func Router(r *gin.Engine) {
 	group := r.Group("/business")
 
+	// 全局加载日志中间件
+	group.Use(middleware.RecordPostLog())
+
 	// 区分模块
 	stockGroup := group.Group("/stock_info") // 行情模块
 	newsGroup := group.Group("/news_info")   // 资讯新闻模块
 	userGroup := group.Group("/user")        // 用户模块
 
-	stockController := controller.StockController{}
-	newsController := controller.NewsController{}
-	userController := controller.UserController{}
-
-	// 全局加载日志中间件
-	group.Use(middleware.RecordPostLog())
+	stockController := stock.StockController{}
+	newsController := news.NewsController{}
+	userController := user.UserController{}
 
 	userGroup.POST("/register", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, userController.Register(ctx))

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	messageEnum "github.com/gin-qt-business/app/constant"
+	messageEnum "github.com/gin-qt-business/app/errors"
 )
 
 const (
@@ -21,11 +21,11 @@ type Response struct {
 }
 
 func NewResponseSuccess(data interface{}) *Response {
-	return newResponse(SUCCESS_CODE, string(messageEnum.SUCCESS_MESSAGE), data)
+	return newResponse(SUCCESS_CODE, messageEnum.SUCCESS_MESSAGE, data)
 }
 
-func NewResponseError(message messageEnum.Message) *Response {
-	return newResponse(FAIL_CODE, string(message), nil)
+func NewResponseError(message string) *Response {
+	return newResponse(FAIL_CODE, message, nil)
 }
 
 func newResponse(code int, message string, data interface{}) *Response {

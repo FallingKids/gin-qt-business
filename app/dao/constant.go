@@ -1,4 +1,4 @@
-package constant
+package dao
 
 type deleted uint
 

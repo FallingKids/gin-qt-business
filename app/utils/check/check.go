@@ -1,9 +1,11 @@
-package utils
+package check
 
 import "regexp"
 
+type Check struct{}
+
 // CheckMobile 检验手机号 - 第一位必为1的十一位数字
-func CheckMobile(phone string) bool {
+func (c *Check) CheckMobile(phone string) bool {
 	// 匹配规则
 	// ^1第一位为一
 	// [345789]{1} 后接一位345789 的数字
